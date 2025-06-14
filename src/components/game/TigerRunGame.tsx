@@ -73,29 +73,34 @@ const TigerRunGame: React.FC = () => {
 
   useEffect(() => {
     if (gameState === 'PLAYING') {
-      // Queue initial instructions
-      setInstructionQueue(prev => [...prev, ...initialInstructionSet]);
+      setInstructionQueue(prev => [...initialInstructionSet, ...prev.filter(msg => msg.type !== 'initial')]);
     } else {
-      // Clear queue and current message if game state is not PLAYING
       setInstructionQueue([]);
       setCurrentMessageData(null);
     }
   }, [gameState]);
 
+  // Effect to display the next message from the queue
   useEffect(() => {
-    let messageTimerId: NodeJS.Timeout;
     if (gameState === 'PLAYING' && !currentMessageData && instructionQueue.length > 0) {
       const nextMessage = instructionQueue[0];
       setCurrentMessageData(nextMessage);
       setInstructionAnimKey(key => key + 1);
       setInstructionQueue(prev => prev.slice(1));
+    }
+  }, [gameState, currentMessageData, instructionQueue, setCurrentMessageData, setInstructionQueue, setInstructionAnimKey]);
 
+  // Effect to clear the current message after a duration
+  useEffect(() => {
+    let messageTimerId: NodeJS.Timeout;
+    if (gameState === 'PLAYING' && currentMessageData) {
       messageTimerId = setTimeout(() => {
         setCurrentMessageData(null);
       }, INSTRUCTION_DURATION);
     }
     return () => clearTimeout(messageTimerId);
-  }, [instructionQueue, currentMessageData, gameState]);
+  }, [gameState, currentMessageData, setCurrentMessageData]);
+
 
   // Effect for bank deposit messages
   useEffect(() => {
@@ -395,3 +400,4 @@ const TigerRunGame: React.FC = () => {
 };
 
 export default TigerRunGame;
+    
