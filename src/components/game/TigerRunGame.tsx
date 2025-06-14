@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import React, { useEffect, useCallback } from 'react';
@@ -7,11 +6,12 @@ import Image from 'next/image';
 import { useGameEngine } from '@/hooks/useGameEngine';
 import TigerIcon from '@/components/icons/TigerIcon';
 import DollarIcon from '@/components/icons/DollarIcon';
-import MonkeyIcon from '@/components/icons/MonkeyIcon'; // New Icon
+import MonkeyIcon from '@/components/icons/MonkeyIcon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CellType } from '@/types/game';
+import type { CellType, Position } from '@/types/game';
 import { CELL_SIZE } from '@/types/game';
+import { Landmark } from 'lucide-react'; // Import Landmark icon
 
 const TigerRunGame: React.FC = () => {
   const {
@@ -27,6 +27,7 @@ const TigerRunGame: React.FC = () => {
     startGame,
     moveTiger,
     handleDollarAnimationComplete,
+    bankPositions, // Get bank positions from the hook
   } = useGameEngine();
 
   const handleKeyDown = useCallback(
@@ -63,7 +64,7 @@ const TigerRunGame: React.FC = () => {
       case 'PATH':
         return <div style={{ width: CELL_SIZE, height: CELL_SIZE }} className="bg-background" aria-label="Path"></div>;
       case 'BANK_DOOR':
-        return <div style={{ width: CELL_SIZE, height: CELL_SIZE }} className="bg-green-700 flex items-center justify-center text-xs text-primary-foreground font-bold" aria-label="Bank">Bank</div>; 
+        return <div style={{ width: CELL_SIZE, height: CELL_SIZE }} className="bg-green-700" aria-label="Bank Entrance"></div>; 
       default:
         return null;
     }
@@ -103,7 +104,7 @@ const TigerRunGame: React.FC = () => {
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-center pt-24"> {/* Added padding-top for external bank */}
             <Image 
               src="https://placehold.co/100x120.png" 
               alt="Decorative Tiger Left" 
@@ -118,6 +119,28 @@ const TigerRunGame: React.FC = () => {
               role="grid"
               aria-label="Game Maze"
             >
+              {/* External Bank Visual */}
+              {bankPositions.map((bp, index) => {
+                const bankVisualWidth = CELL_SIZE * 3;
+                const bankVisualHeight = CELL_SIZE * 2;
+                return (
+                  <div key={`ext-bank-${index}`}
+                       className="absolute bg-green-700 border-4 border-yellow-500 rounded-lg p-2 flex flex-col items-center justify-center text-white shadow-xl"
+                       style={{
+                         width: bankVisualWidth,
+                         height: bankVisualHeight,
+                         top: bp.row === 0 ? `-${bankVisualHeight + 10}px` : `${(bp.row + 1) * CELL_SIZE + 10}px`,
+                         left: `${bp.col * CELL_SIZE + (CELL_SIZE / 2) - (bankVisualWidth / 2)}px`,
+                         zIndex: 20, 
+                       }}
+                       aria-label="The Bank"
+                  >
+                    <Landmark className="w-10 h-10 text-yellow-300" />
+                    <span className="mt-1 text-lg font-bold text-primary-foreground">THE BANK</span>
+                  </div>
+                );
+              })}
+
               {maze.map((row, rowIndex) => (
                 <div key={rowIndex} className="flex" role="row">
                   {row.map((cell, colIndex) => (
@@ -221,4 +244,3 @@ const TigerRunGame: React.FC = () => {
 };
 
 export default TigerRunGame;
-

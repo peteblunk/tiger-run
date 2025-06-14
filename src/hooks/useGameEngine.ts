@@ -28,6 +28,7 @@ interface GameEngineOutput {
   startGame: () => void;
   moveTiger: (direction: Direction) => void;
   handleDollarAnimationComplete: (dollarId: string) => void;
+  bankPositions: Position[]; // Expose bank positions
 }
 
 export const useGameEngine = (): GameEngineOutput => {
@@ -145,7 +146,7 @@ export const useGameEngine = (): GameEngineOutput => {
           moved = true;
         }
 
-        if (!moved && dx !== 0) {
+        if (!moved && dx !== 0) { // If couldn't move vertically, try horizontally
           let tempCol = prevMonkeyPos.col;
           if (dx > 0) tempCol++; else if (dx < 0) tempCol--;
 
@@ -154,7 +155,7 @@ export const useGameEngine = (): GameEngineOutput => {
             moved = true;
           }
         }
-      } else { 
+      } else { // Prefer horizontal or dx is non-zero and dy is zero
         let tempCol = prevMonkeyPos.col;
         if (dx > 0) tempCol++; else if (dx < 0) tempCol--;
 
@@ -163,7 +164,7 @@ export const useGameEngine = (): GameEngineOutput => {
           moved = true;
         }
 
-        if (!moved && dy !== 0) {
+        if (!moved && dy !== 0) { // If couldn't move horizontally, try vertically
           let tempRow = prevMonkeyPos.row;
           if (dy > 0) tempRow++; else if (dy < 0) tempRow--;
 
@@ -272,5 +273,6 @@ export const useGameEngine = (): GameEngineOutput => {
     startGame,
     moveTiger,
     handleDollarAnimationComplete,
+    bankPositions, // Expose bankPositions
   };
 };
