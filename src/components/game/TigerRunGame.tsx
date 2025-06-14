@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import React, { useEffect, useCallback } from 'react';
@@ -62,7 +63,7 @@ const TigerRunGame: React.FC = () => {
       case 'PATH':
         return <div style={{ width: CELL_SIZE, height: CELL_SIZE }} className="bg-background" aria-label="Path"></div>;
       case 'BANK_DOOR':
-        return <div style={{ width: CELL_SIZE, height: CELL_SIZE }} className="bg-green-700 flex items-center justify-center text-primary-foreground font-bold" aria-label="Bank">B</div>; // Simple Bank style
+        return <div style={{ width: CELL_SIZE, height: CELL_SIZE }} className="bg-green-700 flex items-center justify-center text-xs text-primary-foreground font-bold" aria-label="Bank">Bank</div>; 
       default:
         return null;
     }
@@ -220,3 +221,4 @@ const TigerRunGame: React.FC = () => {
 };
 
 export default TigerRunGame;
+
