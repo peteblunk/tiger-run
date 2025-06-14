@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { CellType, Position } from '@/types/game';
 import { CELL_SIZE } from '@/types/game';
-import { Landmark } from 'lucide-react'; // Import Landmark icon
+import { Landmark } from 'lucide-react'; 
 
 const TigerRunGame: React.FC = () => {
   const {
@@ -21,13 +21,14 @@ const TigerRunGame: React.FC = () => {
     monkeyPosition,
     score,
     bankedScore,
+    monkeyScore, // Get monkeyScore
     dollars,
     gameState,
     isTigerMoving,
     startGame,
     moveTiger,
     handleDollarAnimationComplete,
-    bankPositions, // Get bank positions from the hook
+    bankPositions,
   } = useGameEngine();
 
   const handleKeyDown = useCallback(
@@ -83,6 +84,7 @@ const TigerRunGame: React.FC = () => {
             <p className="text-lg text-card-foreground">
               Collect dollars, avoid the monkey, and return to the bank to store your money. 
               You can bank your dollars as many times as you want throughout the game until all the money is collected.
+              If the monkey catches you, it will steal your unbanked dollars!
             </p>
             <p className="text-md text-muted-foreground">Use arrow keys to move.</p>
             <Button onClick={startGame} size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xl py-6">
@@ -92,20 +94,23 @@ const TigerRunGame: React.FC = () => {
         </Card>
       )}
       
-      { (gameState === 'PLAYING' || gameState === 'WON' || gameState === 'GAME_OVER_CAUGHT') && maze.length > 0 && (
+      { (gameState === 'PLAYING' || gameState === 'WON') && maze.length > 0 && (
         <>
           <Card className="mb-6 bg-card shadow-lg">
-            <CardContent className="p-4 flex justify-around gap-4">
+            <CardContent className="p-4 flex flex-wrap justify-around gap-x-6 gap-y-2">
               <p className="text-2xl font-semibold text-accent">
-                Score: <span className="text-primary">{score}</span>
+                Tiger Score: <span className="text-primary">{score}</span>
               </p>
               <p className="text-2xl font-semibold text-accent">
-                Banked: <span className="text-primary">{bankedScore}</span>
+                Tiger Banked: <span className="text-primary">{bankedScore}</span>
+              </p>
+              <p className="text-2xl font-semibold text-red-500"> {/* Using a reddish color for monkey score for differentiation */}
+                Monkey Score: <span className="text-destructive">{monkeyScore}</span>
               </p>
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-center pt-24"> {/* Added padding-top for external bank */}
+          <div className="flex items-center justify-center pt-24">
             <Image 
               src="https://placehold.co/100x120.png" 
               alt="Decorative Tiger Left" 
@@ -120,7 +125,6 @@ const TigerRunGame: React.FC = () => {
               role="grid"
               aria-label="Game Maze"
             >
-              {/* External Bank Visual */}
               {bankPositions.map((bp, index) => {
                 const bankVisualWidth = CELL_SIZE * 3;
                 const bankVisualHeight = CELL_SIZE * 2;
@@ -212,28 +216,15 @@ const TigerRunGame: React.FC = () => {
           {gameState === 'WON' && (
             <Card className="mt-8 w-full max-w-md text-center shadow-2xl bg-card">
               <CardHeader>
-                <CardTitle className="text-4xl text-primary">You Won!</CardTitle>
+                <CardTitle className="text-4xl text-primary">
+                  { (bankedScore + score) > monkeyScore ? "Tiger Wins!" : (monkeyScore > (bankedScore + score) ? "Monkey Wins!" : "It's a Tie!") }
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-2xl text-card-foreground">Final Score (Banked): {bankedScore + score}</p>
+                <p className="text-2xl text-card-foreground">Tiger's Final Score: {bankedScore + score}</p>
+                <p className="text-2xl text-card-foreground">Monkey's Final Score: {monkeyScore}</p>
                 <Button onClick={startGame} size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xl py-6">
                   Play Again
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {gameState === 'GAME_OVER_CAUGHT' && (
-            <Card className="mt-8 w-full max-w-md text-center shadow-2xl bg-card border-destructive">
-              <CardHeader>
-                <CardTitle className="text-4xl text-destructive">Game Over!</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-xl text-card-foreground">The monkey caught you!</p>
-                <p className="text-2xl text-card-foreground">Banked Score: {bankedScore}</p>
-                 <p className="text-md text-muted-foreground">(Unbanked score of {score} lost)</p>
-                <Button onClick={startGame} size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xl py-6">
-                  Try Again
                 </Button>
               </CardContent>
             </Card>

@@ -16,7 +16,7 @@ export interface DollarItem {
   isAnimatingOut: boolean;
 }
 
-export type GameState = 'LOADING' | 'PLAYING' | 'WON' | 'START_SCREEN' | 'GAME_OVER_CAUGHT';
+export type GameState = 'LOADING' | 'PLAYING' | 'WON' | 'START_SCREEN'; // Removed 'GAME_OVER_CAUGHT'
 
 export const CELL_SIZE = 40; // pixels - Increased size
 export const MONKEY_MOVE_INTERVAL = 3; // Monkey moves every N tiger moves - Slower monkey
@@ -34,4 +34,3 @@ export const INITIAL_MAZE_LAYOUT: MazeLayoutSymbol[][] = [
   ['#','D','D','D','D','D','D','D','D','D','D','D','D','D','#'],
   ['#','#','#','#','#','#','#','#','#','#','#','#','#','#','#'],
 ];
-

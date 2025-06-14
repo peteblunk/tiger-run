@@ -22,13 +22,14 @@ interface GameEngineOutput {
   monkeyPosition: Position;
   score: number;
   bankedScore: number;
+  monkeyScore: number; // Added monkey's score
   dollars: DollarItem[];
   gameState: GameState;
   isTigerMoving: boolean;
   startGame: () => void;
   moveTiger: (direction: Direction) => void;
   handleDollarAnimationComplete: (dollarId: string) => void;
-  bankPositions: Position[]; // Expose bank positions
+  bankPositions: Position[];
 }
 
 export const useGameEngine = (): GameEngineOutput => {
@@ -44,6 +45,7 @@ export const useGameEngine = (): GameEngineOutput => {
   const [dollars, setDollars] = useState<DollarItem[]>([]);
   const [score, setScore] = useState(0);
   const [bankedScore, setBankedScore] = useState(0);
+  const [monkeyScore, setMonkeyScore] = useState(0); // Initialize monkey score
   const [gameState, setGameState] = useState<GameState>('START_SCREEN');
   const [isTigerMoving, setIsTigerMoving] = useState(false);
   const [bankPositions, setBankPositions] = useState<Position[]>([]);
@@ -94,7 +96,7 @@ export const useGameEngine = (): GameEngineOutput => {
     });
 
     setMaze(newMaze);
-    setDollars(newDollars);
+    setDollars(newDollars.map(d => ({ ...d, isCollected: false, isAnimatingOut: false }))); // Ensure dollars are reset
     setInitialTigerPosition(startPos);
     setTigerPosition(startPos);
     setInitialMonkeyPosition(monkeyStartPos);
@@ -103,6 +105,7 @@ export const useGameEngine = (): GameEngineOutput => {
     setTigerDirection('RIGHT');
     setScore(0);
     setBankedScore(0);
+    setMonkeyScore(0); // Reset monkey score on new game
     setMonkeyMoveCounter(0);
     setGameState('PLAYING');
   }, []);
@@ -112,10 +115,19 @@ export const useGameEngine = (): GameEngineOutput => {
   };
 
   useEffect(() => {
-    if (gameState === 'PLAYING' && dollars.length > 0 && dollars.every(d => d.isCollected)) {
+    if (gameState === 'PLAYING' && dollars.length > 0 && dollars.every(d => d.isCollected && !d.isAnimatingOut)) {
       setGameState('WON');
     }
   }, [dollars, gameState]);
+
+  const handlePlayerCaught = useCallback(() => {
+    setMonkeyScore(prevMonkeyScore => prevMonkeyScore + score);
+    setScore(0);
+    setTigerPosition(initialTigerPosition);
+    setMonkeyPosition(initialMonkeyPosition);
+    // Note: Game state does not change to 'GAME_OVER_CAUGHT' anymore
+  }, [score, initialTigerPosition, initialMonkeyPosition]);
+
 
   const moveMonkey = useCallback(() => {
     if (gameState !== 'PLAYING' || !maze || maze.length === 0) return;
@@ -134,40 +146,33 @@ export const useGameEngine = (): GameEngineOutput => {
       };
 
       let moved = false;
-
       const preferVertical = Math.abs(dy) > Math.abs(dx) || (Math.abs(dy) === Math.abs(dx) && dy !== 0);
 
       if (preferVertical) {
         let tempRow = prevMonkeyPos.row;
         if (dy > 0) tempRow++; else if (dy < 0) tempRow--;
-        
         if (tempRow !== prevMonkeyPos.row && isValidMove(tempRow, prevMonkeyPos.col)) {
           targetRow = tempRow;
           moved = true;
         }
-
-        if (!moved && dx !== 0) { // If couldn't move vertically, try horizontally
+        if (!moved && dx !== 0) {
           let tempCol = prevMonkeyPos.col;
           if (dx > 0) tempCol++; else if (dx < 0) tempCol--;
-
           if (tempCol !== prevMonkeyPos.col && isValidMove(prevMonkeyPos.row, tempCol)) {
             targetCol = tempCol;
             moved = true;
           }
         }
-      } else { // Prefer horizontal or dx is non-zero and dy is zero
+      } else {
         let tempCol = prevMonkeyPos.col;
         if (dx > 0) tempCol++; else if (dx < 0) tempCol--;
-
         if (tempCol !== prevMonkeyPos.col && isValidMove(prevMonkeyPos.row, tempCol)) {
           targetCol = tempCol;
           moved = true;
         }
-
-        if (!moved && dy !== 0) { // If couldn't move horizontally, try vertically
+        if (!moved && dy !== 0) {
           let tempRow = prevMonkeyPos.row;
           if (dy > 0) tempRow++; else if (dy < 0) tempRow--;
-
           if (tempRow !== prevMonkeyPos.row && isValidMove(tempRow, prevMonkeyPos.col)) {
             targetRow = tempRow;
             moved = true;
@@ -178,12 +183,13 @@ export const useGameEngine = (): GameEngineOutput => {
       const nextMonkeyPos = {row: targetRow, col: targetCol};
 
       if (nextMonkeyPos.row === tigerPosition.row && nextMonkeyPos.col === tigerPosition.col) {
-        setGameState('GAME_OVER_CAUGHT');
+        handlePlayerCaught();
+        return initialMonkeyPosition; // Monkey also resets
       }
       return nextMonkeyPos;
     });
 
-  }, [maze, tigerPosition, gameState]);
+  }, [maze, tigerPosition, gameState, handlePlayerCaught, initialMonkeyPosition]);
 
 
   const moveTiger = useCallback((direction: Direction) => {
@@ -214,11 +220,17 @@ export const useGameEngine = (): GameEngineOutput => {
       
       const newPos = { row: newRow, col: newCol };
 
+      if (newPos.row === monkeyPosition.row && newPos.col === monkeyPosition.col) {
+        handlePlayerCaught();
+        setTimeout(() => setIsTigerMoving(false), 150);
+        return initialTigerPosition; // Tiger resets
+      }
+      
       if (bankPositions.some(bp => bp.row === newRow && bp.col === newCol)) {
         if (score > 0) {
           setBankedScore(prevBanked => prevBanked + score);
           setScore(0);
-          setMonkeyPosition(initialMonkeyPosition); // Reset monkey to start
+          setMonkeyPosition(initialMonkeyPosition); // Reset monkey to start when tiger banks
         }
       } else { 
         const dollarIndex = dollars.findIndex(
@@ -234,16 +246,9 @@ export const useGameEngine = (): GameEngineOutput => {
         }
       }
       
-      if (newPos.row === monkeyPosition.row && newPos.col === monkeyPosition.col) {
-        setGameState('GAME_OVER_CAUGHT');
-        setTimeout(() => setIsTigerMoving(false), 150);
-        return newPos; 
-      }
-
       const newMonkeyMoveCounter = monkeyMoveCounter + 1;
       setMonkeyMoveCounter(newMonkeyMoveCounter);
       if (newMonkeyMoveCounter % MONKEY_MOVE_INTERVAL === 0) {
-        // Check if monkey needs to be reset before moving
         if (!(bankPositions.some(bp => bp.row === newRow && bp.col === newCol) && score > 0)) {
             moveMonkey();
         }
@@ -253,7 +258,7 @@ export const useGameEngine = (): GameEngineOutput => {
       return newPos;
     });
 
-  }, [maze, dollars, gameState, score, bankedScore, bankPositions, monkeyPosition, monkeyMoveCounter, moveMonkey, initialMonkeyPosition]);
+  }, [maze, dollars, gameState, score, bankedScore, bankPositions, monkeyPosition, monkeyMoveCounter, moveMonkey, initialMonkeyPosition, initialTigerPosition, handlePlayerCaught]);
 
   const handleDollarAnimationComplete = useCallback((dollarId: string) => {
     setDollars(prevDollars => 
@@ -271,6 +276,7 @@ export const useGameEngine = (): GameEngineOutput => {
     monkeyPosition,
     score,
     bankedScore,
+    monkeyScore,
     dollars,
     gameState,
     isTigerMoving,
