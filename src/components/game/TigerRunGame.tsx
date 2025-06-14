@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import Image from 'next/image';
 import { useGameEngine } from '@/hooks/useGameEngine';
 import TigerIcon from '@/components/icons/TigerIcon';
@@ -9,9 +9,19 @@ import DollarIcon from '@/components/icons/DollarIcon';
 import MonkeyIcon from '@/components/icons/MonkeyIcon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CellType, Position } from '@/types/game';
+import type { CellType, Position, Direction as GameDirection } from '@/types/game'; // Renamed Direction to GameDirection
 import { CELL_SIZE } from '@/types/game';
-import { Landmark } from 'lucide-react'; 
+import { Landmark, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'; 
+import { cn } from '@/lib/utils';
+
+const instructionMessages = [
+  "Ready, Tiger?",
+  "Run through the maze and grab the cash!",
+  "Bring it back and put it in the bank before the monkey takes it from you!",
+  "Come back to the bank as often as you want!",
+  "Pick up all the money and see who wins!",
+];
+const INSTRUCTION_DURATION = 3500; // ms for each instruction to show
 
 const TigerRunGame: React.FC = () => {
   const {
@@ -21,7 +31,7 @@ const TigerRunGame: React.FC = () => {
     monkeyPosition,
     score,
     bankedScore,
-    monkeyScore, // Get monkeyScore
+    monkeyScore,
     dollars,
     gameState,
     isTigerMoving,
@@ -31,25 +41,79 @@ const TigerRunGame: React.FC = () => {
     bankPositions,
   } = useGameEngine();
 
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent) => {
-      if (gameState !== 'PLAYING') return;
-      switch (event.key) {
-        case 'ArrowUp': moveTiger('UP'); break;
-        case 'ArrowDown': moveTiger('DOWN'); break;
-        case 'ArrowLeft': moveTiger('LEFT'); break;
-        case 'ArrowRight': moveTiger('RIGHT'); break;
-      }
-    },
-    [moveTiger, gameState]
-  );
+  const [currentInstruction, setCurrentInstruction] = useState<string | null>(null);
+  const [instructionAnimKey, setInstructionAnimKey] = useState(0);
+  const [pressedArrowKeys, setPressedArrowKeys] = useState<{ [key: string]: boolean }>({
+    UP: false, DOWN: false, LEFT: false, RIGHT: false
+  });
 
   useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
+    let instructionTimeoutId: NodeJS.Timeout;
+    if (gameState === 'PLAYING') {
+      let currentIndex = 0;
+      const showNext = () => {
+        if (currentIndex < instructionMessages.length) {
+          setCurrentInstruction(instructionMessages[currentIndex]);
+          setInstructionAnimKey(key => key + 1);
+          currentIndex++;
+          instructionTimeoutId = setTimeout(showNext, INSTRUCTION_DURATION);
+        } else {
+          setCurrentInstruction(null); 
+        }
+      };
+      // Delay start of instructions slightly to allow player to orient
+      setTimeout(showNext, 500);
+    } else {
+      setCurrentInstruction(null); 
+    }
+    return () => clearTimeout(instructionTimeoutId);
+  }, [gameState]);
+
+  const internalHandleKeyDown = useCallback((event: KeyboardEvent) => {
+    if (gameState !== 'PLAYING' && event.key.startsWith('Arrow')) return;
+
+    let directionToMove: GameDirection | null = null;
+    switch (event.key) {
+      case 'ArrowUp':
+        setPressedArrowKeys(prev => ({ ...prev, UP: true }));
+        directionToMove = 'UP';
+        break;
+      case 'ArrowDown':
+        setPressedArrowKeys(prev => ({ ...prev, DOWN: true }));
+        directionToMove = 'DOWN';
+        break;
+      case 'ArrowLeft':
+        setPressedArrowKeys(prev => ({ ...prev, LEFT: true }));
+        directionToMove = 'LEFT';
+        break;
+      case 'ArrowRight':
+        setPressedArrowKeys(prev => ({ ...prev, RIGHT: true }));
+        directionToMove = 'RIGHT';
+        break;
+    }
+    if (directionToMove && gameState === 'PLAYING') {
+      moveTiger(directionToMove);
+    }
+  }, [moveTiger, gameState]);
+
+  const internalHandleKeyUp = useCallback((event: KeyboardEvent) => {
+    switch (event.key) {
+      case 'ArrowUp': setPressedArrowKeys(prev => ({ ...prev, UP: false })); break;
+      case 'ArrowDown': setPressedArrowKeys(prev => ({ ...prev, DOWN: false })); break;
+      case 'ArrowLeft': setPressedArrowKeys(prev => ({ ...prev, LEFT: false })); break;
+      case 'ArrowRight': setPressedArrowKeys(prev => ({ ...prev, RIGHT: false })); break;
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('keydown', internalHandleKeyDown);
+    window.addEventListener('keyup', internalHandleKeyUp);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', internalHandleKeyDown);
+      window.removeEventListener('keyup', internalHandleKeyUp);
     };
-  }, [handleKeyDown]);
+  }, [internalHandleKeyDown, internalHandleKeyUp]);
+
 
   if (gameState === 'LOADING') {
     return <div className="flex items-center justify-center h-screen text-2xl">Loading Game...</div>;
@@ -71,6 +135,18 @@ const TigerRunGame: React.FC = () => {
     }
   };
   
+  const bankVisual = bankPositions.length > 0 ? bankPositions[0] : null;
+  let bankTopStyle = '0px';
+  let bankLeftStyle = '0px';
+  const bankVisualWidth = CELL_SIZE * 3;
+  const bankVisualHeight = CELL_SIZE * 2;
+
+  if (bankVisual) {
+    bankTopStyle = bankVisual.row === 0 ? `-${bankVisualHeight + 10}px` : `${(bankVisual.row + 1) * CELL_SIZE + 10}px`;
+    bankLeftStyle = `${bankVisual.col * CELL_SIZE + (CELL_SIZE / 2) - (bankVisualWidth / 2)}px`;
+  }
+
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background text-foreground">
       <h1 className="text-5xl font-bold text-primary mb-8 font-headline">Tiger Run</h1>
@@ -104,13 +180,13 @@ const TigerRunGame: React.FC = () => {
               <p className="text-2xl font-semibold text-accent">
                 Tiger Banked: <span className="text-primary">{bankedScore}</span>
               </p>
-              <p className="text-2xl font-semibold text-red-500"> {/* Using a reddish color for monkey score for differentiation */}
+              <p className="text-2xl font-semibold text-destructive"> 
                 Monkey Score: <span className="text-destructive">{monkeyScore}</span>
               </p>
             </CardContent>
           </Card>
 
-          <div className="flex items-center justify-center pt-24">
+          <div className="flex items-center justify-center pt-12 relative"> {/* pt-12 for bank space, relative for instruction positioning */}
             <Image 
               src="https://placehold.co/100x120.png" 
               alt="Decorative Tiger Left" 
@@ -125,26 +201,30 @@ const TigerRunGame: React.FC = () => {
               role="grid"
               aria-label="Game Maze"
             >
-              {bankPositions.map((bp, index) => {
-                const bankVisualWidth = CELL_SIZE * 3;
-                const bankVisualHeight = CELL_SIZE * 2;
-                return (
-                  <div key={`ext-bank-${index}`}
-                       className="absolute bg-green-700 border-4 border-yellow-500 rounded-lg p-2 flex flex-col items-center justify-center text-white shadow-xl"
+              {bankVisual && (
+                <div className="absolute flex items-start" style={{ top: bankTopStyle, left: bankLeftStyle, zIndex: 20, pointerEvents: 'none' }}>
+                    <div
+                       className="bg-green-700 border-4 border-yellow-500 rounded-lg p-2 flex flex-col items-center justify-center text-white shadow-xl"
                        style={{
                          width: bankVisualWidth,
                          height: bankVisualHeight,
-                         top: bp.row === 0 ? `-${bankVisualHeight + 10}px` : `${(bp.row + 1) * CELL_SIZE + 10}px`,
-                         left: `${bp.col * CELL_SIZE + (CELL_SIZE / 2) - (bankVisualWidth / 2)}px`,
-                         zIndex: 20, 
                        }}
                        aria-label="The Bank"
-                  >
-                    <Landmark className="w-10 h-10 text-yellow-300" />
-                    <span className="mt-1 text-lg font-bold text-primary-foreground">THE BANK</span>
-                  </div>
-                );
-              })}
+                    >
+                      <Landmark className="w-10 h-10 text-yellow-300" />
+                      <span className="mt-1 text-lg font-bold text-primary-foreground">THE BANK</span>
+                    </div>
+                    {currentInstruction && (
+                        <div
+                            key={instructionAnimKey}
+                            className="ml-4 instruction-text-area instruction-text-animated"
+                            style={{ minWidth: '220px', textAlign: 'left' }}
+                        >
+                            {currentInstruction}
+                        </div>
+                    )}
+                </div>
+              )}
 
               {maze.map((row, rowIndex) => (
                 <div key={rowIndex} className="flex" role="row">
@@ -212,6 +292,26 @@ const TigerRunGame: React.FC = () => {
               className="ml-4 hidden md:block"
             />
           </div>
+
+          {gameState === 'PLAYING' && (
+            <div className="mt-8 flex flex-col items-center" aria-label="Keyboard arrow key hints">
+              <div className={cn('arrow-key', pressedArrowKeys['UP'] && 'arrow-key-pressed')}>
+                <ArrowUp />
+              </div>
+              <div className="flex mt-1">
+                <div className={cn('arrow-key', pressedArrowKeys['LEFT'] && 'arrow-key-pressed')}>
+                  <ArrowLeft />
+                </div>
+                <div className={cn('arrow-key mx-1', pressedArrowKeys['DOWN'] && 'arrow-key-pressed')}>
+                  <ArrowDown />
+                </div>
+                <div className={cn('arrow-key', pressedArrowKeys['RIGHT'] && 'arrow-key-pressed')}>
+                  <ArrowRight />
+                </div>
+              </div>
+            </div>
+          )}
+
 
           {gameState === 'WON' && (
             <Card className="mt-8 w-full max-w-md text-center shadow-2xl bg-card">

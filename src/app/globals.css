@@ -124,3 +124,32 @@ body {
 .animate-dollar-collect {
   animation: dollar-collect 0.5s forwards;
 }
+
+/* Instruction Text Animation */
+@keyframes instruction-fade-in {
+  from { opacity: 0; transform: translateX(-15px) scale(0.95); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+.instruction-text-animated {
+  animation: instruction-fade-in 0.5s ease-out forwards;
+}
+.instruction-text-area {
+  @apply p-3 bg-card text-card-foreground rounded-lg shadow-xl text-base;
+  /* Deliberately using a slightly different shadow and padding than card default for emphasis */
+}
+
+
+/* Arrow Key Hint Styles */
+.arrow-key {
+  @apply border-2 border-primary rounded-md p-2 w-12 h-12 flex items-center justify-center transition-colors duration-100 ease-in-out bg-card hover:bg-primary/20;
+}
+.arrow-key svg {
+  @apply w-6 h-6 text-primary;
+}
+.arrow-key-pressed {
+  @apply bg-primary border-primary-foreground shadow-inner;
+}
+.arrow-key-pressed svg {
+  @apply text-primary-foreground;
+}
+
