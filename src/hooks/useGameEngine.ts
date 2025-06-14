@@ -218,6 +218,7 @@ export const useGameEngine = (): GameEngineOutput => {
         if (score > 0) {
           setBankedScore(prevBanked => prevBanked + score);
           setScore(0);
+          setMonkeyPosition(initialMonkeyPosition); // Reset monkey to start
         }
       } else { 
         const dollarIndex = dollars.findIndex(
@@ -242,14 +243,17 @@ export const useGameEngine = (): GameEngineOutput => {
       const newMonkeyMoveCounter = monkeyMoveCounter + 1;
       setMonkeyMoveCounter(newMonkeyMoveCounter);
       if (newMonkeyMoveCounter % MONKEY_MOVE_INTERVAL === 0) {
-        moveMonkey(); 
+        // Check if monkey needs to be reset before moving
+        if (!(bankPositions.some(bp => bp.row === newRow && bp.col === newCol) && score > 0)) {
+            moveMonkey();
+        }
       }
       
       setTimeout(() => setIsTigerMoving(false), 150);
       return newPos;
     });
 
-  }, [maze, dollars, gameState, score, bankPositions, monkeyPosition, monkeyMoveCounter, moveMonkey]);
+  }, [maze, dollars, gameState, score, bankedScore, bankPositions, monkeyPosition, monkeyMoveCounter, moveMonkey, initialMonkeyPosition]);
 
   const handleDollarAnimationComplete = useCallback((dollarId: string) => {
     setDollars(prevDollars => 
@@ -273,6 +277,6 @@ export const useGameEngine = (): GameEngineOutput => {
     startGame,
     moveTiger,
     handleDollarAnimationComplete,
-    bankPositions, // Expose bankPositions
+    bankPositions, 
   };
 };
