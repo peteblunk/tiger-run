@@ -81,7 +81,8 @@ const TigerRunGame: React.FC = () => {
           </CardHeader>
           <CardContent className="space-y-6">
             <p className="text-lg text-card-foreground">
-              Guide the tiger through the maze, collect dollars, bank them, and avoid the monkey!
+              Collect dollars, avoid the monkey, and return to the bank to store your money. 
+              You can bank your dollars as many times as you want throughout the game until all the money is collected.
             </p>
             <p className="text-md text-muted-foreground">Use arrow keys to move.</p>
             <Button onClick={startGame} size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xl py-6">
