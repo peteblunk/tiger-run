@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import Image from 'next/image';
 import { useGameEngine } from '@/hooks/useGameEngine';
 import TigerIcon from '@/components/icons/TigerIcon';
@@ -9,17 +9,23 @@ import DollarIcon from '@/components/icons/DollarIcon';
 import MonkeyIcon from '@/components/icons/MonkeyIcon';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { CellType, Position, Direction as GameDirection } from '@/types/game'; // Renamed Direction to GameDirection
+import type { CellType, Position, Direction as GameDirection, DollarItem } from '@/types/game';
 import { CELL_SIZE } from '@/types/game';
 import { Landmark, ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react'; 
 import { cn } from '@/lib/utils';
 
-const instructionMessages = [
-  "Ready, Tiger?",
-  "Run through the maze and grab the cash!",
-  "Bring it back and put it in the bank before the monkey takes it from you!",
-  "Come back to the bank as often as you want!",
-  "Pick up all the money and see who wins!",
+interface InstructionMessage {
+  type: string;
+  amount?: number;
+  text?: string; // For initial hardcoded messages
+}
+
+const initialInstructionSet: InstructionMessage[] = [
+  { type: 'initial', text: "Ready, Tiger?" },
+  { type: 'initial', text: "Run through the maze and grab the cash!" },
+  { type: 'initial', text: "Bring it back and put it in the bank before the monkey takes it from you!" },
+  { type: 'initial', text: "Come back to the bank as often as you want!" },
+  { type: 'initial', text: "Pick up all the money and see who wins!" },
 ];
 const INSTRUCTION_DURATION = 3500; // ms for each instruction to show
 
@@ -41,33 +47,75 @@ const TigerRunGame: React.FC = () => {
     bankPositions,
   } = useGameEngine();
 
-  const [currentInstruction, setCurrentInstruction] = useState<string | null>(null);
+  const [instructionQueue, setInstructionQueue] = useState<InstructionMessage[]>([]);
+  const [currentMessageData, setCurrentMessageData] = useState<InstructionMessage | null>(null);
   const [instructionAnimKey, setInstructionAnimKey] = useState(0);
   const [pressedArrowKeys, setPressedArrowKeys] = useState<{ [key: string]: boolean }>({
     UP: false, DOWN: false, LEFT: false, RIGHT: false
   });
 
+  const prevScoreRef = useRef(score);
+  const prevBankedScoreRef = useRef(bankedScore);
+  const prevMonkeyScoreRef = useRef(monkeyScore);
+
   useEffect(() => {
-    let instructionTimeoutId: NodeJS.Timeout;
+    prevScoreRef.current = score;
+  }, [score]);
+
+  useEffect(() => {
+    prevBankedScoreRef.current = bankedScore;
+  }, [bankedScore]);
+
+  useEffect(() => {
+    prevMonkeyScoreRef.current = monkeyScore;
+  }, [monkeyScore]);
+
+
+  useEffect(() => {
     if (gameState === 'PLAYING') {
-      let currentIndex = 0;
-      const showNext = () => {
-        if (currentIndex < instructionMessages.length) {
-          setCurrentInstruction(instructionMessages[currentIndex]);
-          setInstructionAnimKey(key => key + 1);
-          currentIndex++;
-          instructionTimeoutId = setTimeout(showNext, INSTRUCTION_DURATION);
-        } else {
-          setCurrentInstruction(null); 
-        }
-      };
-      // Delay start of instructions slightly to allow player to orient
-      setTimeout(showNext, 500);
+      // Queue initial instructions
+      setInstructionQueue(prev => [...prev, ...initialInstructionSet]);
     } else {
-      setCurrentInstruction(null); 
+      // Clear queue and current message if game state is not PLAYING
+      setInstructionQueue([]);
+      setCurrentMessageData(null);
     }
-    return () => clearTimeout(instructionTimeoutId);
   }, [gameState]);
+
+  useEffect(() => {
+    let messageTimerId: NodeJS.Timeout;
+    if (gameState === 'PLAYING' && !currentMessageData && instructionQueue.length > 0) {
+      const nextMessage = instructionQueue[0];
+      setCurrentMessageData(nextMessage);
+      setInstructionAnimKey(key => key + 1);
+      setInstructionQueue(prev => prev.slice(1));
+
+      messageTimerId = setTimeout(() => {
+        setCurrentMessageData(null);
+      }, INSTRUCTION_DURATION);
+    }
+    return () => clearTimeout(messageTimerId);
+  }, [instructionQueue, currentMessageData, gameState]);
+
+  // Effect for bank deposit messages
+  useEffect(() => {
+    if (gameState === 'PLAYING' && bankedScore > prevBankedScoreRef.current && score === 0 && prevScoreRef.current > 0) {
+      const amountBanked = prevScoreRef.current;
+      setInstructionQueue(prev => [...prev, { type: 'banked', amount: amountBanked }]);
+      if (dollars.some(d => !d.isCollected && !d.isAnimatingOut)) {
+        setInstructionQueue(prev => [...prev, { type: 'get_more' }]);
+      }
+    }
+  }, [bankedScore, score, dollars, gameState]);
+
+  // Effect for monkey catch messages
+  useEffect(() => {
+     if (gameState === 'PLAYING' && monkeyScore > prevMonkeyScoreRef.current && score === 0 && prevScoreRef.current > 0) {
+      const amountStolen = prevScoreRef.current;
+      setInstructionQueue(prev => [...prev, { type: 'caught', amount: amountStolen }]);
+    }
+  }, [monkeyScore, score, gameState]);
+
 
   const internalHandleKeyDown = useCallback((event: KeyboardEvent) => {
     if (gameState !== 'PLAYING' && event.key.startsWith('Arrow')) return;
@@ -146,6 +194,17 @@ const TigerRunGame: React.FC = () => {
     bankLeftStyle = `${bankVisual.col * CELL_SIZE + (CELL_SIZE / 2) - (bankVisualWidth / 2)}px`;
   }
 
+  const renderCurrentInstruction = (data: InstructionMessage | null) => {
+    if (!data) return null;
+    switch (data.type) {
+      case 'initial': return data.text;
+      case 'banked': return `Tiger deposited ${data.amount} dollars!`;
+      case 'get_more': return "Go get more money, Tiger!";
+      case 'caught': return `The Monkey caught you! He got ${data.amount} of your dollars!`;
+      default: return null;
+    }
+  };
+
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-background text-foreground">
@@ -214,13 +273,13 @@ const TigerRunGame: React.FC = () => {
                       <Landmark className="w-10 h-10 text-yellow-300" />
                       <span className="mt-1 text-lg font-bold text-primary-foreground">THE BANK</span>
                     </div>
-                    {currentInstruction && (
+                    {currentMessageData && (
                         <div
                             key={instructionAnimKey}
                             className="ml-4 instruction-text-area instruction-text-animated"
-                            style={{ minWidth: '220px', textAlign: 'left' }}
+                            style={{ minWidth: '220px', maxWidth: '300px', textAlign: 'left' }}
                         >
-                            {currentInstruction}
+                            {renderCurrentInstruction(currentMessageData)}
                         </div>
                     )}
                 </div>
