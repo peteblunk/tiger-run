@@ -1,7 +1,7 @@
 import type {Config} from 'tailwindcss';
 
 export default {
-  darkMode: ['class'],
+  darkMode: ['class'], // Ensure 'class' strategy is used for manual dark mode toggle if needed
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -10,8 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        body: ['Inter', 'sans-serif'], // Inter for longer passages, as per spec
+        headline: ['Space Grotesk', 'sans-serif'], // Space Grotesk for headlines and primary text
         code: ['monospace'],
       },
       colors: {
@@ -88,10 +88,20 @@ export default {
             height: '0',
           },
         },
+        'chomp-mouth': { /* Renamed to avoid conflict if shadcn adds its own */
+          '0%, 100%': { transform: 'scaleY(0.3)' },
+          '50%': { transform: 'scaleY(1)' },
+        },
+        'dollar-collect-anim': { /* Renamed to avoid conflict */
+          '0%': { opacity: '1', transform: 'scale(1) translateY(0)' },
+          '100%': { opacity: '0', transform: 'scale(0.5) translateY(-20px)' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'chomp-mouth': 'chomp-mouth 0.3s infinite',
+        'dollar-collect': 'dollar-collect-anim 0.5s forwards',
       },
     },
   },
