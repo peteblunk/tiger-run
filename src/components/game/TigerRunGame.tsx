@@ -253,6 +253,7 @@ const TigerRunGame: React.FC = () => {
           <div className="flex items-center justify-center pt-12 relative"> {/* pt-12 for bank space, relative for instruction positioning */}
             <Image 
               src="https://placehold.co/100x120.png" 
+              src="/images/LeftImage.png"
               alt="Decorative Tiger Left" 
               width={100} 
               height={120} 
@@ -330,7 +331,7 @@ const TigerRunGame: React.FC = () => {
                 role="img"
                 aria-label="Tiger"
               >
-                <TigerIcon isMoving={isTigerMoving} direction={tigerDirection} size={CELL_SIZE} />
+                <TigerIcon isMoving={isTigerMoving} size={CELL_SIZE} />
               </div>
 
               <div

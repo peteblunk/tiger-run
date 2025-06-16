@@ -27,7 +27,7 @@ body {
     --muted: 18 29% 25%; /* Muted Brown */
     --muted-foreground: 44 60% 80%; /* Muted Gold/Beige */
 
-    --accent: 60 100% 25%; /* Olive Green */
+    --accent: 97 36% 56%; /* Dollar Bill Green */
     --accent-foreground: 0 0% 100%; /* White */
 
     --destructive: 0 80% 55%; /* Brighter Red for errors/monkey score */
@@ -49,7 +49,7 @@ body {
     --sidebar-foreground: 44 60% 90%;
     --sidebar-primary: 28 100% 50%; /* Tiger Orange */
     --sidebar-primary-foreground: 20 30% 10%;
-    --sidebar-accent: 60 100% 25%;
+    --sidebar-accent: 97 36% 56%; /* Dollar Bill Green */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 18 29% 20%;
     --sidebar-ring: 28 100% 50%; /* Tiger Orange */
@@ -70,7 +70,7 @@ body {
     --secondary-foreground: 0 0% 100%;
     --muted: 18 29% 25%;
     --muted-foreground: 44 60% 80%;
-    --accent: 60 100% 25%;
+    --accent: 97 36% 56%; /* Dollar Bill Green */
     --accent-foreground: 0 0% 100%;
     --destructive: 0 80% 55%; /* Brighter Red for errors/monkey score */
     --destructive-foreground: 0 0% 98%;
@@ -88,7 +88,7 @@ body {
     --sidebar-foreground: 44 60% 90%;
     --sidebar-primary: 28 100% 50%; /* Tiger Orange */
     --sidebar-primary-foreground: 20 30% 10%;
-    --sidebar-accent: 60 100% 25%;
+    --sidebar-accent: 97 36% 56%; /* Dollar Bill Green */
     --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 18 29% 20%;
     --sidebar-ring: 28 100% 50%; /* Tiger Orange */
