@@ -153,3 +153,12 @@ body {
   @apply text-primary-foreground;
 }
 
+.tiger-icon {
+  vertical-align: baseline; /* You can experiment with other values if needed */
+  display: inline-block; /* You can experiment with other values if needed */
+}
+
+.static-decoration {
+  pointer-events: none;
+  user-select: none
+}

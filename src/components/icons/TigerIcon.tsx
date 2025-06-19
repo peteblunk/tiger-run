@@ -8,6 +8,7 @@ interface TigerIconProps {
 const TigerIcon: React.FC<TigerIconProps> = ({ size }) => {
   return (
     <img
+      className="tiger-icon"
       src="/images/TigerIcon.png"
       alt="Tiger Icon"
       width={size}
