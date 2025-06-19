@@ -20,16 +20,11 @@ interface InstructionMessage {
   text?: string;
 }
 
-const initialInstructionSet: InstructionMessage[] = [
-  { type: 'initial', text: "Ready, Tiger?" },
-  { type: 'initial', text: "Run through the maze and grab the cash!" },
-  { type: 'initial', text: "Bring it back and put it in the bank before the monkey takes it from you!" },
-  { type: 'initial', text: "Come back to the bank as often as you want!" },
-  { type: 'initial', text: "Pick up all the money and see who wins!" },
-];
+const initialInstructionSet: InstructionMessage[] = [{ type: 'initial', text: "Hey, Tiger!" }, { type: 'initial', text: "Run through the maze and collect the dollars!" }, { type: 'initial', text: "Bring the dollars to the bank and save them." }, { type: 'initial', text: "If Monkey catches you he'll take any unsaved dollars you have." }, { type: 'initial', text: "You can save your money at the bank as many times as often as you want until all the money is collected." }, ];
 const INSTRUCTION_DURATION = 3500;
 
 const TigerRunGame: React.FC = () => {
+  const [currentInstructionIndex, setCurrentInstructionIndex] = useState(0);
   const {
     maze,
     tigerPosition,
@@ -57,6 +52,19 @@ const TigerRunGame: React.FC = () => {
   const prevScoreRef = useRef(score);
   const prevBankedScoreRef = useRef(bankedScore);
   const prevMonkeyScoreRef = useRef(monkeyScore);
+
+  useEffect(() => {
+    if (gameState === 'START_SCREEN') {
+      const instructionInterval = setInterval(() => {
+        setCurrentInstructionIndex((prevIndex) =>
+          (prevIndex + 1) % initialInstructionSet.length
+        );
+      }, INSTRUCTION_DURATION); // Change instruction every INSTRUCTION_DURATION milliseconds
+      return () => clearInterval(instructionInterval);
+    } else {
+      setCurrentInstructionIndex(0); // Reset when game starts
+    }
+  }, [gameState]);
 
   useEffect(() => {
     prevScoreRef.current = score;
@@ -220,10 +228,8 @@ const TigerRunGame: React.FC = () => {
             <CardTitle className="text-3xl text-primary">Welcome to Tiger Run!</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            <p className="text-lg text-card-foreground">
-              Collect dollars, avoid the monkey, and return to the bank to store your money.
-              You can bank your dollars as many times as you want throughout the game until all the money is collected.
-              If the monkey catches you, it will steal your unbanked dollars!
+ <p key={currentInstructionIndex} className="text-lg text-card-foreground fade-in">
+ {initialInstructionSet[currentInstructionIndex]?.text}
             </p>
             <p className="text-md text-muted-foreground">Use arrow keys to move.</p>
             <Button onClick={startGame} size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xl py-6">

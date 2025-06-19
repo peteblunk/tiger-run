@@ -127,10 +127,24 @@ body {
 
 /* Instruction Text Animation */
 @keyframes instruction-fade-in {
-  from { opacity: 0; transform: translateX(-15px) scale(0.95); }
-  to { opacity: 1; transform: translateX(0) scale(1); }
+ from { opacity: 0; }
+ to { opacity: 1; }
 }
-.instruction-text-animated {
+
+.fade-in {
+ animation: instruction-fade-in 1s ease-in-out forwards;
+}
+
+
+/* Styles for the splash page instructions */
+.splash-instruction {
+  font-size: 1.5rem; /* Bigger font size */
+  font-weight: bold; /* Bolder text */
+  font-family: 'Space Grotesk', sans-serif; /* Playful font if available, otherwise sans-serif */
+  text-align: center;
+}
+
+.instruction-text-animated { /* This class seems to be for in-game messages, keeping it separate */
   animation: instruction-fade-in 0.5s ease-out forwards;
 }
 .instruction-text-area {
@@ -154,6 +168,11 @@ body {
 }
 
 .tiger-icon {
+  vertical-align: baseline; /* You can experiment with other values if needed */
+  display: inline-block; /* You can experiment with other values if needed */
+}
+
+.monkey-icon {
   vertical-align: baseline; /* You can experiment with other values if needed */
   display: inline-block; /* You can experiment with other values if needed */
 }
