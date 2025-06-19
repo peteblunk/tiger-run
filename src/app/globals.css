@@ -162,3 +162,8 @@ body {
   pointer-events: none;
   user-select: none
 }
+
+.decorative-image {
+  height: 293px; /* Approximately 2/3 of 440px */
+  width: auto; /* Maintain aspect ratio */
+}

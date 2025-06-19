@@ -233,14 +233,22 @@ const TigerRunGame: React.FC = () => {
           </CardContent>
         </Card>
       )}
-      
       { (gameState === 'PLAYING' || gameState === 'WON') && maze.length > 0 && (
         <>
+          {/* Left Decorative Image */}
+          <div className="decorative-image mr-4 hidden md:block static-decoration" style={{ height: '293px', position: 'relative' }}>
+            <Image 
+              src="/images/LeftImage.png" 
+              alt="Decorative Image" 
+              fill 
+              style={{ objectFit: 'cover' }} 
+            />
+          </div>
           <Card className="mb-6 bg-card shadow-lg">
             <CardContent className="p-4 flex flex-wrap justify-around gap-x-6 gap-y-2">
-              <p className="text-2xl font-semibold text-accent">
-                Tiger Score: <span className="text-primary">{score}</span>
-              </p>
+              {/* Score Display */}
+
+              <p className="text-2xl font-semibold text-accent">Tiger Score: <span className="text-primary">{score}</span></p>
               <p className="text-2xl font-semibold text-accent">
                 Tiger Banked: <span className="text-primary">{bankedScore}</span>
               </p>
@@ -249,17 +257,8 @@ const TigerRunGame: React.FC = () => {
               </p>
             </CardContent>
           </Card>
-
+          
           <div className="flex items-center justify-center pt-12 relative"> {/* pt-12 for bank space, relative for instruction positioning */}
-            <Image 
-              src="https://placehold.co/100x120.png" 
-              src="/images/LeftImage.png"
-              alt="Decorative Tiger Left" 
-              width={100} 
-              height={120} 
-              data-ai-hint="cartoon tiger" 
-              className="mr-4 hidden md:block" 
-            />
             <div 
               className="relative border-2 border-primary shadow-2xl" 
               style={{ width: mazeWidth, height: mazeHeight, backgroundColor: 'hsl(var(--background))' }}
@@ -348,29 +347,65 @@ const TigerRunGame: React.FC = () => {
                 <MonkeyIcon size={CELL_SIZE * 0.9} />
               </div>
             </div>
-            <Image 
-              src="https://placehold.co/100x120.png" 
-              alt="Decorative Tiger Right" 
-              width={100} 
-              height={120} 
-              data-ai-hint="cartoon tiger" 
-              className="ml-4 hidden md:block"
-            />
-          </div>
-
+            {/* Right Decorative Image */}
+            <div className="decorative-image ml-4 hidden md:block static-decoration" style={{ height: '293px', position: 'relative' }}>
+              <Image 
+                src="/images/RightImage.png" 
+                alt="Decorative Image" 
+                fill 
+                style={{ objectFit: 'cover' }} 
+              />
+            </div>
+           </div>         
           {gameState === 'PLAYING' && (
             <div className="mt-8 flex flex-col items-center" aria-label="Keyboard arrow key hints">
-              <div className={cn('arrow-key', pressedArrowKeys['UP'] && 'arrow-key-pressed')}>
+              <div
+                className={cn('arrow-key', pressedArrowKeys['UP'] && 'arrow-key-pressed')}
+                onMouseDown={() => setPressedArrowKeys(prev => ({ ...prev, UP: true }))}
+                onMouseUp={() => setPressedArrowKeys(prev => ({ ...prev, UP: false }))}
+                onClick={() => {
+                  if (gameState === 'PLAYING') {
+                    moveTiger('UP');
+                  }
+                }}
+              >
                 <ArrowUp />
               </div>
               <div className="flex mt-1">
-                <div className={cn('arrow-key', pressedArrowKeys['LEFT'] && 'arrow-key-pressed')}>
+                <div
+                  className={cn('arrow-key', pressedArrowKeys['LEFT'] && 'arrow-key-pressed')}
+                  onMouseDown={() => setPressedArrowKeys(prev => ({ ...prev, LEFT: true }))}
+                  onMouseUp={() => setPressedArrowKeys(prev => ({ ...prev, LEFT: false }))}
+                  onClick={() => {
+                    if (gameState === 'PLAYING') {
+                      moveTiger('LEFT');
+                    }
+                  }}
+                >
                   <ArrowLeft />
                 </div>
-                <div className={cn('arrow-key mx-1', pressedArrowKeys['DOWN'] && 'arrow-key-pressed')}>
+                <div
+                  className={cn('arrow-key mx-1', pressedArrowKeys['DOWN'] && 'arrow-key-pressed')}
+                  onMouseDown={() => setPressedArrowKeys(prev => ({ ...prev, DOWN: true }))}
+                  onMouseUp={() => setPressedArrowKeys(prev => ({ ...prev, DOWN: false }))}
+                  onClick={() => {
+                    if (gameState === 'PLAYING') {
+                      moveTiger('DOWN');
+                    }
+                  }}
+                >
                   <ArrowDown />
                 </div>
-                <div className={cn('arrow-key', pressedArrowKeys['RIGHT'] && 'arrow-key-pressed')}>
+                <div
+                  className={cn('arrow-key', pressedArrowKeys['RIGHT'] && 'arrow-key-pressed')}
+                  onMouseDown={() => setPressedArrowKeys(prev => ({ ...prev, RIGHT: true }))}
+                  onMouseUp={() => setPressedArrowKeys(prev => ({ ...prev, RIGHT: false }))}
+                  onClick={() => {
+                    if (gameState === 'PLAYING') {
+                      moveTiger('RIGHT');
+                    }
+                  }}
+                >
                   <ArrowRight />
                 </div>
               </div>
