@@ -186,3 +186,10 @@ body {
   height: 293px; /* Approximately 2/3 of 440px */
   width: auto; /* Maintain aspect ratio */
 }
+.sequential-instruction {
+  /* Styles to match the title color */
+  color: hsl(var(--primary)); /* This is likely the color variable for your title */
+  /* You can also add other styles here */
+  font-size: 2.0em; /* Example: slightly larger font */
+  margin-bottom: 0.2em; /* Example: spacing between instructions */
+}

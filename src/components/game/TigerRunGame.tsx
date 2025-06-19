@@ -20,7 +20,7 @@ interface InstructionMessage {
   text?: string;
 }
 
-const initialInstructionSet: InstructionMessage[] = [{ type: 'initial', text: "Hey, Tiger!" }, { type: 'initial', text: "Run through the maze and collect the dollars!" }, { type: 'initial', text: "Bring the dollars to the bank and save them." }, { type: 'initial', text: "If Monkey catches you he'll take any unsaved dollars you have." }, { type: 'initial', text: "You can save your money at the bank as many times as often as you want until all the money is collected." }, ];
+const initialInstructionSet: InstructionMessage[] = [{ type: 'initial', text: "Hey, Tiger!" }, { type: 'initial', text: "Run through the maze and collect the dollars!" }, { type: 'initial', text: "Bring the dollars to the bank and save them." }, { type: 'initial', text: "If Monkey catches you he'll take your unsaved dollars." }, { type: 'initial', text: "Save your money at the bank as often as you want until all the money is collected." }, ];
 const INSTRUCTION_DURATION = 3500;
 
 const TigerRunGame: React.FC = () => {
@@ -228,9 +228,13 @@ const TigerRunGame: React.FC = () => {
             <CardTitle className="text-3xl text-primary">Welcome to Tiger Run!</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
- <p key={currentInstructionIndex} className="text-lg text-card-foreground fade-in">
- {initialInstructionSet[currentInstructionIndex]?.text}
+          {initialInstructionSet.map((instruction, index) => (
+            index <= currentInstructionIndex && (
+            <p key={index} className="text-lg text-card-foreground sequential-instruction">
+            {instruction.text}
             </p>
+            )
+            ))}
             <p className="text-md text-muted-foreground">Use arrow keys to move.</p>
             <Button onClick={startGame} size="lg" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xl py-6">
               Start Game
