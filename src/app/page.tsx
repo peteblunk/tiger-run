@@ -1,6 +1,6 @@
 'use client';
 import TigerRunGame from '@/components/game/TigerRunGame';
-import PinEntry from '@/components/ui/PinEntry';
+import PinEntry from '@/components/PinEntry';
 import { useState } from 'react';
 
 export default function Home() {
