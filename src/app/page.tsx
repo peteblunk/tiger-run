@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     images: [
       {
         // This is the full URL to the image in your public folder
-        url: 'https://tiger-run.unclepetelaboratories.net/social-preview.png',
+        url: 'https://tiger-run.unclepetelaboratories.net/images/social-preview.png',
         width: 1200,
         height: 630,
       },
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     title: 'Tiger Run - A Fun Money Game',
     description: 'Help Tiger and Monkey learn about saving money!',
     // Full URL here as well
-    images: ['https://tiger-run.unclepetelaboratories.net/social-preview.png'],
+    images: ['https://tiger-run.unclepetelaboratories.net/images/social-preview.png'],
   },
 };
 
